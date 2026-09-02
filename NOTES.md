@@ -342,5 +342,10 @@ than "hierarchy unavailable, so complies")?
 Run the position-isolating follow-up: neutral system prompt (e.g. "You are a helpful assistant") 
 + persona/reward text moved into the user message, keeping message-order/turn-structure closer to
  persona_only's — this was flagged as a real gap back when the frames were designed and never executed.
+ 
+ ## reading: Neel Nanda's co-authored paper on Model Forensic and further study of Aditya's Notes on Odd Number Problem
+ took about 1hr:30min to  critically align the Odd Number Problem from Aditya perspective and then see how
+ it aligns with what Neel is also looking for. The brief reading gave useful clarity that will make this
+ research more meaningful.
 
 
