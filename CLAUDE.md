@@ -22,6 +22,10 @@ flushes after every write, append-only. No test suite, linter, or build step.
   `model_key`, `system_prompt`, `user_content`, calls the model, retries with exponential backoff
   (`MAX_RETRIES`), extracts answer + `reasoning` (CoT). Numeric answers via `parse_number_strict`
   (confidence-tiered: bare > bolded > unique-in-prose > ambiguous-returns-None-rather-than-guess).
+  Also exposes `_chat(model, messages)` — a bare chat call with the same retry/backoff behavior
+  but no answer-parsing/frame-tagging, used by callers needing a raw follow-up completion on an
+  existing message list (e.g. the awareness-pushback probe and Steps 1-3's classification/
+  resampling/confusion calls below).
 
 - `agents/run_sprint.py` — PRECURSOR EXPERIMENT, not superseded/redundant. Six-frame sprint
   (`no_reward`, `baseline`, `cost_control`, `obedience`, `strategic`, `broken_system`), N=5/frame,
@@ -38,11 +42,39 @@ flushes after every write, append-only. No test suite, linter, or build step.
   context) are NOT YET IMPLEMENTED in this file — do not assume they exist. See NOTES.md for
   current status before extending this file.
 
+- `agents/odd_even_persona_hierarchy_test.py` — Session 3 decisive test: `persona_only` (persona +
+  reward text as a system message) vs. `user_as_developer` (identical content, entirely inside the
+  user's message, no system prompt), N=20/model, isolating whether hierarchy-availability (not
+  persona-identity alone) drives the elevated odd-rate. Imports engine/parser from
+  `forensic_engine.py` rather than duplicating them. Writes rows to
+  `outputs/persona_hierarchy_test_n{N_PER_FRAME}.jsonl`, including the full `messages` list per row
+  so `persona_hierarchy_steps123.py` can resume a conversation without reconstructing it. Also runs
+  a secondary, unvalidated keyword-triage "awareness-pushback" probe (simulates the next user turn
+  after an odd answer, classifies pushback vs. satisfied vs. unclear) — treat as exploratory only,
+  per NOTES.md.
+
+- `agents/persona_hierarchy_steps123.py` — Steps 1-3 of the H0/H1/H2(/H3) investigation, run against
+  the odd-answer rows produced by `odd_even_persona_hierarchy_test.py`
+  (`outputs/persona_hierarchy_test_n20.jsonl`). Step 1: third-person forced-choice classification
+  (now a 4-option choice, A/B/C/D, with D covering adversarial-pattern-recognition per NOTES.md's
+  Hypothesis v2). Step 2: sentence-by-sentence CoT resampling (`N_RESAMPLE`, capped to the first 3
+  odd rows for cost) via prefix + continuation. Step 3: confusion check, asked outside any acting
+  context. Writes `outputs/persona_hierarchy_step{1,2,3}_n20_*.jsonl`. No-op with an explanatory
+  message if the input file has zero odd-answer rows — that outcome is itself a result, not a
+  failure to fix.
+
+- `agents/split_outputs.py` — one-time utility, not part of the experiment pipeline. Splits the
+  legacy co-mingled `outputs/generations.jsonl` into `outputs/precursor_six_frame.jsonl` (six-frame
+  rows) and `outputs/step0_bare_env.jsonl` (Step 0 rows), keyed on the `frame` field. Historical
+  record of how the current split files were produced; rerun only if `generations.jsonl` gains new
+  unsplit rows.
+
 - `outputs/*.jsonl` — accumulated research data. Append-only, do not regenerate/overwrite casually.
-  NOTE: run_sprint.py and odd_even_metagaming_sprint.py currently write to the same
-  outputs/generations.jsonl path, distinguished only by the `frame` field (six-frame names vs.
-  `step0_bare_env`). [Update this line once you decide whether to separate output paths — see
-  NOTES.md reconciliation entry.]
+  Current per-experiment files: `precursor_six_frame.jsonl` (six-frame precursor), `step0_bare_env.jsonl`
+  (Step 0 bare-environment replication), `persona_hierarchy_test_n20.jsonl` (persona_only /
+  user_as_developer, Session 3), `persona_hierarchy_step{1,2,3}_n20_*.jsonl` (Steps 1-3 outputs).
+  `generations.jsonl` is the original co-mingled file predating the split — kept for provenance,
+  see `split_outputs.py`.
 
 - `NOTES.md` — extended, finding-first rationale per commit checkpoint. This is where
   interpretation, results, and limitations get written up — NOT in commit messages, NOT by
