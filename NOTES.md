@@ -80,9 +80,11 @@ dynamically, so both models run without manual toggling.
    frames, both models: 0/5, no exceptions. Three independent N=5 draws
    of the strategic/GPT120B_OSS cell now on record: ~1-2/5, 0/5, 2/5 —
    consistent with ordinary binomial sampling noise around a moderate
-   true rate, not with the effect disappearing. The "reproduction
-   failure" framing was itself a symptom of under-powered N=5 sampling,
-   exactly as the earlier Wilson-CI discussion predicted.
+   true rate, not with the effect disappearing or the model "learning" 
+   between runs (ruled out on mechanistic grounds — each API call is 
+   stateless, no cross-session memory exists; see discussionbelow). 
+   The "reproductionfailure" framing was itself a symptom of 
+   under-powered N=5 sampling,exactly as the earlier Wilson-CI discussion predicted.
 
 3. Attempted ThreadPoolExecutor concurrency optimization for the N=20
    run (see script comments) — hit Groq rate limits as flagged in
