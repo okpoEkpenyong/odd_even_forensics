@@ -1,0 +1,9 @@
+evidence,observation,H0,H1,H2,H3,H4
+E1: Bare environment,0/40 odd across GPT-OSS-20B and 120B,1,0,1,2,0
+E2: Strategic framing,7/40 odd: GPT-OSS-120B 4/20; GPT-OSS-20B 3/20,1,2,0,0,1
+E3: Non-strategic frame controls,"0/100 odd across baseline, no-reward, cost-control, obedience, broken-system cells",0,-1,0,1,0
+"E4: Persona-only, GPT-OSS-120B",8/20 odd; 2 explicit refusals,0,1,0,0,2
+"E5: Persona-only, GPT-OSS-20B",4/20 odd; 4 explicit refusals,0,1,0,0,2
+E6: User-as-developer control,0/40 odd across both models,0,-2,0,1,-2
+E7: Strategic refusal traces,Explicit refusals occurred under strategic framing,0,0,-1,0,2
+TOTAL (heuristic compatibility score),,2,1,0,4,5

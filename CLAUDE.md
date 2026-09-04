@@ -2,15 +2,69 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## What this is
-A forensic-testing harness probing reward-hacking / instruction-following conflicts in open-weight
-LLMs served via Groq (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`). Source question (Neel Nanda's
-MATS 12.0 stream doc, "Odd Number" environment): when asked for an even number but told odd scores
-1.0/even scores 0.0 in-context, why do models sometimes answer odd? Three candidate explanations
-under test, NOT just "reward hacking vs compliance":
-- **H0 (metagaming):** model believes the prompt is testing its strategic reasoning, and treats
-  "answer that scores well" as the actual task.
-- **H1 (reward hacking):** model understands the user literally wants even, knowingly overrides it.
-- **H2 (confusion):** model doesn't clearly track the conflict.
+
+A forensic-testing harness investigating why open-weight LLMs served via Groq
+(`openai/gpt-oss-120b`, `openai/gpt-oss-20b`) sometimes answer "odd" when
+explicitly asked for an even number, given an in-context reward signal that
+scores odd answers 1.0 and even answers 0.0.
+
+The source setting is Neel Nanda's MATS 12.0 stream document, in the "Odd
+Number" environment (https://www.lesswrong.com/posts/LhXW8ziwnn7Dd8edm/a-toy-environment-for-exploring-reasoning-about-reward) ,
+which itself was referenced as Concrete Problems in Model Forensics by his Neel's alumnus, Aditya Singh.
+Singh's own paper (co-authored with Neel), (Singh, Aditya, et al.,2026) sets the actual standard this project is
+held to, and that standard is narrower than "does the model hack the
+reward." The paper's real question is whether a concerning action reflects
+genuine misalignment (in the form of deception or malign intent) — 
+the model knowingly/maliciously acting against what it believes
+the user wants — or a benign (harmless) explanation, such as confusion, that only looks
+concerning from the outside.
+
+That distinction is the actual research question here, not a side note:
+
+**Does an odd answer reflect the model knowingly acting against the user's
+intent (malign), or does it reflect some other explanation — confusion about
+the task, a mistaken belief about what's being asked, or something else —
+that only looks like misalignment from the outside (benign)?**
+
+Four behavioral hypotheses have been tested so far, but it's worth being
+explicit that none of them, on their own, answer that question. They
+describe *when* and *under what framing* odd-answering happens, not whether
+the model believes it's doing something the user would object to:
+
+- **H0, metagaming:** the model believes the prompt is secretly testing its
+  strategic reasoning, and treats "give the answer that scores well" as the
+  actual task it's being asked to do.
+- **H1, reward hacking:** the model understands the user literally wants an
+  even number, and knowingly gives a different answer to chase the stated
+  score instead. As currently tested, this label is asserted from the
+  model's stated reasoning, not independently verified — see the open gap
+  below.
+- **H2, confusion:** the model doesn't clearly track the conflict between
+  the user's request and the reward signal at all. Reasonably ruled out by
+  the Step 3 confusion probe.
+- **H3/H4, adversarial-pattern-recognition and persona-driven refusal:**
+  discovered later than H0-H2, from reading the raw completions rather than
+  from the original hypothesis set. See NOTES.md for the evidence.
+
+None of H0 through H4 currently test the thing the paper actually cares
+about: whether the model, after giving an odd answer, tracks that the user
+would disapprove and proceeds anyway, versus never forming that belief in
+the first place. The paper calls this an "adversarial misalignment" test,
+and runs it through several independent behavioral checks — does the model
+prefer a review scope that would hide the deviation, does it disclose the
+deviation unprompted, does the deviation rate change under simulated
+scrutiny. Nothing like that has been implemented here yet. The current
+awareness-pushback triage (see NOTES.md, commit `3b26b14`) is the closest
+thing that exists, but it was built and logged as a secondary, exploratory
+heuristic, not as a primary test of this question, and it hasn't been
+validated the way the paper requires.
+
+It's also worth stating plainly that the paper itself admits it has no
+**positive control** for this kind of test — no rigged version of the model
+that's deliberately, verifiably misaligned, to confirm the test would
+actually detect misalignment if it were present. This project doesn't have
+one either. Any future claim about malign versus benign intent here should
+be read with that limitation attached, not treated as settled.
 
 ## Running
 

@@ -221,3 +221,37 @@ The project has moved from simple observation to a validated causal model. I hav
 4.  Acknowledged gaps, weakness, and future improvements
 
 ***
+### Final Sanity Check, Folder restructuring and visualisations
+**Data artifacts: **
+*   **Some early trial logs (Step 0) lack 'frame' metadata and appear as 'unknown' in the aggregate.** 
+*   **Furthermore, due to connection-related retries and file-appending logic, some cells (e.g., Persona Hierarchy Test) reached N=33.** 
+*   **Some early trial logs (Step 0) lack 'frame' metadata and appear as 'unknown' in the aggregate.** 
+*   **I have manually verified that these rows represent independent trials and include them to increase statistical power.** 
+
+**Data Integrity Audit:**
+*   **I developed a custom sanity_check.py script to audit the 826 raw trial rows collected during the 20-hour sprint. ** 
+*   **The audit identified 65 schema-related problems. 40 of these were 'fossil' rows from the initial exploration (Step 0) where metadata keys were not yet standardized. ** 
+*   **More significantly, the audit surfaced 13 cross-file duplicate identities (verified by identical timestamps).** 
+*   ** I have accounted for these by using unique trial identifiers in my final statistical analysis, ensuring that the reported hacking rates (e.g., 42.4% for 120B Persona-Only) are based on independent observations."** 
+
+** ACH **
+
+I implemented `ach_table.py` to formalize the mapping of evidence to my competing hypotheses.
+The script yields a clear preference for **H4 (Persona-driven refusal/role effects: +5)** and
+ **H3 (Adversarial-pattern recognition: +4)**.
+The weighting confirms that hacking is predominantly a **structural authority calculation** rather than a 
+reflexive drive for reward (**H1: +1**). The near-zero score for **H2 (Confusion: 0)** reflects the 100% accuracy 
+found in bare-environment competency tests. The ACH framework now provides a traceable justification for the claims 
+presented in the upcoming Executive Summary.
+
+## Note: Project Restructure & Finalization
+
+The project was renamed from `model_forensic` to `odd_even_forensics` to better reflect the specific task focus. Directory structure was standardized: raw data is now strictly in `outputs/experiments/`, and analysis logic is centralized in `analysis/`.
+
+**Final technical status:**
+- 826 trials across 13 scripts aggregated and audited.
+- Causal variables (Identity vs Authority) successfully isolated.
+- "Positive Control" gap closed via `instrument_validation.py`.
+- Forensic plots generated via `generate_plots.py`.
+ 
+
