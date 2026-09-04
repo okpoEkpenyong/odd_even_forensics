@@ -1,9 +1,3 @@
-My apologies for the oversight. Looking at your screenshot, I have corrected the `README.md` to reflect the actual project layout. I have removed the `agents` folder and ensured the file paths match your current workspace.
-
-**Copy this into a new file named `README.md` in your `odd_even_forensics` root folder:**
-
-***
-
 # Why Do Models Reward-Hack? 
 ### Forensic Disentanglement of Authority Hierarchies and Persona-Driven Misalignment
 
