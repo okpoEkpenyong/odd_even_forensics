@@ -1,4 +1,24 @@
-﻿import os
+﻿"""Shared engine for all odd_even_forensics experiments.
+
+ForensicEngine wraps the Groq chat completions client for
+openai/gpt-oss-120b and openai/gpt-oss-20b (temperature 1,
+reasoning_effort "medium"), retrying with exponential backoff up to
+MAX_RETRIES. Failed runs return None and are never written as data rows.
+
+Two call paths:
+- run_forensic_task(model_key, system_prompt, user_content): single-turn
+  experiment call. Captures the `reasoning` field (chain of thought) and
+  parses the answer via parse_number_strict. Note: the system turn is
+  always sent, even when system_prompt is "" (see CLAUDE.md).
+- _chat(model, messages): bare completion on an existing message list,
+  same retries, no parsing — used by follow-up probes and Steps 1-3.
+
+parse_number_strict applies confidence tiers (bare > bolded > unique-in-
+prose) and returns None rather than guessing when ambiguous.
+parse_number is the legacy last-integer parser, kept for provenance.
+"""
+
+import os
 import re
 import time
 import logging

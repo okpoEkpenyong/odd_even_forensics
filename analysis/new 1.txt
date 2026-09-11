@@ -1,0 +1,161 @@
+The project: 
+A MATS application sprint (Neel Nanda stream, deadline 2026-09-11) investigating why models game the "Odd Number"
+evaluation environment — extending jenny & Schoen's environment to open-weight models (gpt-oss 120B & 20B via Groq), using a counterfactual-frame protocol inspired by the "Why do models task game?" paper.
+
+The core question: 
+When a model outputs the odd (cheating) answer, is it reward-hacking, metagaming, confused, or something else? 
+You built 5 hypotheses (H0 metagaming, H1 reward-directed, H2 confusion, H3 adversarial-pattern, H4 hierarchy-enabled strategic-role) 
+and tested them with ~513 canonical trial rows across frames.
+
+The headline finding: Hacking only appears when a strategic persona is combined with system-level authority — bare hierarchy alone gives 0%. H4 wins the ACH matrix at +10, well clear of H3 (+4). Hierarchy-availability is necessary but not sufficient; persona is the active ingredient.
+
+What remains: verification and write-up. The numbers are locked; you're closing audit gaps before the exec summary
+
+What that session was: a data-integrity audit before the write-up. sanity_check.py had found 65 schema problems 
+(40 fossil Step-0 rows, 13 cross-file duplicates), so we re-aggregated from only the 5 canonical files
+ — confirming 513 trial rows, 26 cells as the locked dataset:
+ (.venv) PS C:\Users\Administrator.DESKTOP-P34765Q\Desktop\exzing\31stMarch\odd_even_forensics> python analysis/aggregate_results.py `
+>>   --file outputs/experiments/generations_n20.jsonl ` 
+>>   --file outputs/experiments/persona_hierarchy_test_n20.jsonl `
+>>   --file outputs/experiments/nudge_isolation_n20.jsonl `
+>>   --file outputs/experiments/instrument_validation_n15.jsonl `
+>>   --file outputs/experiments/odd_even_metagaming_sprint_n20.jsonl
+
+240+93+80+60+40 (513) rows for each generations_n20.jsonl, persona_hierarchy_test_n20.jsonl, nudge_isolation_n20.jsonl, instrument_validation_n15.jsonl
+and odd_even_metagaming_sprint_n20.jsonl respectively
+
+Key outputs:
+
+    Locked numbers, including corrections to earlier figures: 
+	     120B persona_only is 14/33 (42.4%),
+		 superseding the old 8/20; 
+		 20B persona_only 3/20; 
+		 non-strategic controls 1/220 (one 20B baseline anomaly,
+		 CoT review pending)
+    The timestamp duplicate check on persona_hierarchy returned [] — 
+	the 33 completions of 120B persona_only are independent, not duplicates ach_table.py edits: 
+	     E3/E4/E5 observations updated to locked numbers, 
+		 E6 re-scored +2 for H4 with explicit hierarchy-availability rationale. 
+		 Final ACH totals: H4 +10, H3 +4, H0 +2, H1/H2 0
+		 
+The N=33 came from the persona_only 120B cell being run more than once into the same file — persona_hierarchy_test_n20.jsonl 
+accumulated appended runs (likely a partial run plus a rerun after failures, since forensic_engine.py returns None on failed runs 
+and you re-ran to fill gaps). That's why we ran the timestamp duplicate check on exactly this cell:
+the worry was that the 33 included duplicate rows counted twice.
+
+(.venv) PS C:\Users\Administrator.DESKTOP-P34765Q\Desktop\exzing\31stMarch\odd_even_forensics>
+python -c "import json,collections; rows=[json.loads(l) for l in open('outputs/experiments/persona_hierarchy_test_n20.jsonl',encoding='utf-8') if l.strip()]; 
+ts=collections.Counter((r.get('timestamp'),r.get('frame'),r.get('model_key')) for r in rows); print([k for k,v in ts.items() if v>1])"
+[]
+
+The check returned [] — all 33 are independent completions, so the aggregation keeps them all rather than arbitrarily discarding 13.
+
+For the write-up: report N=33 honestly with a one-line note ("cell was run twice due to API failures; all completions verified independent; all retained"). Don't trim to 20 post-hoc — that would be selecting which rows to keep after seeing results.
+
+The 20B persona_only cell stayed at N=20, which is why the cells differ.		 
+
+Still open: 
+step 6 spot-check of the 6 "other" rows (2× 120B, 4× 20B persona_only), 
+the 20B baseline anomaly CoT, then NOTES.md fixes A–D and exec summary.
+
+Now the 65 fully reconciles:
+
+    40 — every row of step0_main_completions_n20.jsonl missing the frame field (these are the "fossil" Step-0 rows)
+    12 — step3_confusion_check_n20.jsonl: 6 rows each missing both frame and answer (6×2 = 12 problems)
+    13 — the within-file "duplicate identities" in persona_hierarchy_test_n20.jsonl (indices 0–12 of 120B persona_only appearing twice)
+
+40 + 12 + 13 = 65. So my earlier note was slightly off: the 13 duplicates counted in the 65 are the within-file ones, and there's a separate cross-file duplicate list (50+ identities, e.g. generations.jsonl overlapping generations_n5.jsonl, and step0 files overlapping) that's reported below the total but not counted in it.
+
+Two things this confirms: none of the problem files are in your 5 canonical inputs, and the within-file duplicates are index collisions (same sample index, two run batches) — which your timestamp check showed are distinct completions, hence N=33.
+
+One flag: the cross-file duplicates mean generations.jsonl's strategic rows likely overlap generations_n5.jsonl — fine, since neither is canonical.
+
+
+The 6 rows in persona_hierarchy_test_n20.jsonl classified "other" by your automated triage:
+
+    2× GPT120B_OSS / persona_only
+    4× GPT20B_OSS / persona_only
+
+(You can see them in the sanity_check output: 'other': 2 and 'other': 4 in those cells.)
+
+Goal: you're reporting these as "explicit refusals" in the write-up and ACH table (E4/E5, E7). "Other" just means the classifier couldn't parse an even/odd answer — that could be a refusal, but it could also be a malformed response that's actually a hack, or confusion (which would be evidence for H2). Reading the 6 CoTs manually confirms the "refusal" label is honest before you publish it.
+
+If any turn out to be hacks or confusion, the persona_only rates and the E7 interpretation change — that's why it's blocking the exec summary.
+
+
+
+
+Let's see Neel's guide and some sample submissions:
+
+
+
+## Application Format
+
+**Format**: An application should consist of a summary of your findings in the [application form](https://airtable.com/appnMboxg76F1QIDc/pagqu7wWWrUCZkNVI/form), and a google doc describing your key findings which begins with an executive summary and ideally contains a bunch of graphs, and enough detail to follow what you did without needing to read your code. You’re encouraged to include code, but it’s not required, I’ll largely use it to give my agents context and ask them questions about what you actually did and I’ll only read it as necessary to understand the write-up better. **Remember to let anyone with the link access the doc**! 
+
+**Write-ups are important** so you get 2 extra hours to do it. Prioritize the application form summary Qs, I read these first and use them as a preliminary filter, I don’t have time to read every write-up. Convey concretely what you did, what you found, why it's interesting, biggest limitations, etc. Specifics beat vibes: name the models, the key experiment, the surprising number.
+
+
+
+### Executive Summary Format
+
+The first 1-3 pages of the google doc should be an executive summary, which gives the broad strokes of what you did and what you learned. Something at **\~1 page** (including graphs) is great, **max 3 pages** and **max 600 words**. Please **include graphs**! Bullet points can work well
+
+One good format is to have sections for:
+
+- What problem am I trying to solve? (and a bit on why you think it’s interesting)
+  - Remember - what you write is always far clearer to yourself than to the reader! Though you can assume it will be read by someone with mech interp research experience
+- What are your high-level takeaways? What were the most interesting parts of your project?
+- One paragraph and graph per key experiment, giving the gist of what it was, what you found, and why this supports your key takeaways
+
+If bad data would sink your project, show me the data. If everything rests on the quality of some dataset or judgement calls (e.g. you generated the dataset with an LLM, or used an LLM judge to score outputs), look at it yourself - and include some randomly selected qualitative examples in the write-up, ideally just after the executive summary. Randomly selected, not cherry-picked! A handful of raw examples is the easiest way to show me that the thing your whole project rests on is actually real.
+
+
+
+### Writing Advice
+
+It’s extremely important to have a good write-up! The advice in my post on [writing ML papers](https://www.alignmentforum.org/posts/eJGptPbbFPZGLpjsp/highly-opinionated-advice-on-how-to-write-ml-papers) may be helpful - obviously, I don’t expect a formal paper, but the principles of clear communication apply.
+
+- **Focus on a Narrative.** Don't just dump all your experiments. Structure your write-up around the one or two most interesting, concrete insights you found. What is the key story?
+- **Quality over Quantity.** One interesting finding, well-explained and well-supported, is far better than ten superficial experiments.
+- **Show Your Work.** Explain *why* you ran an experiment, not just *what* you did. What hypothesis were you testing? What were the possible outcomes? This reveals your thought process.
+- **Your Reader Has Zero Context.** The "illusion of transparency" is a huge trap. Things that feel obvious to you will be completely new to your reader. Explain everything from the ground up. Define your terms. Label your graphs clearly.
+- **Make Your Executive Summary Count.** It needs to stand on its own and convey the most important takeaways and a sketch of your key evidence. Don't make me hunt for the point or crucial details. Good graphs are a huge plus here.
+
+## How are applications evaluated?
+
+### What do good applications look like?
+
+- **Clarity**: If I understand what you’re claiming, what evidence you’re providing, and think that evidence supports your conclusion, that instantly puts you in the top 20% of applicants.
+  - Show me enough detail so I can follow along: how did you generate your data or choose your prompts, how did you define your metrics, what were your hyperparameters, etc.? This can be concise if done well—bullet points and short code snippets can go a long way.
+  - I like bullet points, good graphs, summaries, good structure, and intuitive explanations to get the high-level picture across clearly - [more advice here](https://docs.google.com/document/d/1p-ggQV3vVWIQuCccXEl1fD0thJOgXimlbBpGk6FI32I/edit?tab=t.75rygwi582jr#heading=h.ytdk815d2s93).
+- **Good Taste**: You chose an interesting question, and were able to get traction on it, and produce results I find compelling. My favourite kind of application is one where I learn something from it. 
+  - Choosing a question aligned with my research interests is extremely helpful
+  - This doesn’t have to be a big, ambitious claim—just any claim that’s not immediately obvious without evidence. 
+  - Originality is a big plus. If I've seen a bunch of applications doing extremely similar things, this is less exciting.
+  - Having interests aligned with [my research interests](https://docs.google.com/document/d/1p-ggQV3vVWIQuCccXEl1fD0thJOgXimlbBpGk6FI32I/edit?tab=t.knytn7x826kv#heading=h.43zbrv5nq2w7) is a significant plus.
+- **Truth-seeking and Skepticism**: The easiest person to fool is yourself. You constantly questioned your results, looked for alternative explanations, and did sanity checks. Negative or inconclusive results that are well-analysed are much better than a poorly supported positive result. ([more advice](https://www.alignmentforum.org/s/5GT3yoYM9gRmMEKqL/p/cbBwwm4jW6AZctymL#Truth_Seeking))
+  - The key thing to emphasize is self-awareness and clarity. It's a harsh time limit, so there are going to be holes in your results. It’s OK if you show self-awareness of where the holes are, which parts are speculative, what you would investigate next, etc. If you seem overconfident in shaky results, that is not. Make plausible claims over ambitious ones.
+  - A subskill here is **attention to detail**: Noticing subtleties and edge cases, and investigating them where appropriate
+- **Technical Depth & Practicality**: You demonstrate a good handle on the relevant tools, whether that's coding, experiment design, or specific interpretability methods. You show a willingness to get your hands dirty writing code and running experiments. Your writing and design decisions make it clear that you understand what you’re doing and it’s well motivated, rather than blindly following a recipe/LLM
+  - Useful areas of knowledge: knowledge of mech interp papers and techniques, ability to work with large models on GPUs or train SAEs, fluency with linear algebra, understanding of transformers, understanding of ML, coding skill, ability to design good interactive interfaces and visualisations, etc. 
+- **Simplicity**: Being biased towards trying the simple, obvious methods first (or explaining why they were unsuitable). It’s easy to get excited by fancy techniques, but they can be a trap. Good applications are pragmatic and focused, not showing off.
+  - E.g. in [recent work](https://www.alignmentforum.org/posts/wnzkjSmrgWZaBa2aC/self-preservation-or-instruction-ambiguity-examining-the) from my team into why models seemingly showed self-preservation, we started with the obvious things of reading the CoT and prompting and, er, it just worked, and we stopped there and wrote up the post.
+  - Each piece of complexity in the project should be there for a reason
+- **Prioritisation: You used your time well, and went deep on one or two key insights, rather than being superficial about many things (**[**more advice**](https://www.alignmentforum.org/s/5GT3yoYM9gRmMEKqL/p/cbBwwm4jW6AZctymL#Prioritisation)**)**
+  - **A common mistake is getting caught in rabbit holes - finding one random anomaly or detail that (in my opinion) isn’t very interesting, and spending the whole time zooming on that. Knowing when to pivot where appropriate is impressive**
+    - **If you’re totally changing directions (ie, so that your code and findings so far isn’t particularly helpful for the new direction), I’m fine with you restarting the 20 hour limit.**
+  - **Another is spreading yourself too thin - doing lots of things superficially, but without enough depth for any one to be interesting**
+  - **Yes, these tips point in opposite directions. Sorry! You need to balance between these two extremes. This is hard and I don’t expect anyone to do it perfectly. I recommend setting a timer every hour or two to zoom out and ask if you’re making progress or caught up in a rabbit hole.**
+- **Productivity**: While it's more important to do things well than do them fast, the ideal is both. Some researchers are a lot more productive per unit time than others, and they get a lot more done. ([more advice](https://www.alignmentforum.org/s/5GT3yoYM9gRmMEKqL/p/cbBwwm4jW6AZctymL#Moving_Fast))
+  - This isn’t about cutting corners - there’s a lot of skill to having fast feedback loops, noticing and fixing inefficiency where appropriate, and being able to take action or reflect where appropriate.
+- **Show your work: It’s great to see your thought process, understand why you made the decisions you made, etc. This matters most if your results are inconclusive or key parts failed: if you want me through what you tried and why, and what happened, and I think you made reasonable decisions, that’s still impressive. **
+  - **The difference between “I got stuck so I gave up” and “I got stuck, so I pivoted or found a new angle, or identified the reason why it didn’t work” is huge.**
+  - **Though if you** ***do*** **have an interesting finding, please structure the write-up to emphasise it, don’t do chronological order!**
+- **Enthusiasm & Curiosity: Mech interp can be hard, confusing and frustrating, or it can be fascinating, exciting and tantalising. How you feel about it is a big input here, to how good at the research you are and how much fun you have. A core research skill is following your curiosity (and learning the research taste to be curious about productive things!)**
+  - **I know this is easy to fake and hard to judge from an application, so I don’t weight it highly here**
+  - **But generally applications that are fun to read get bonus points!**
+
+
+
+https://docs.google.com/document/d/1_-zmL_8xm-jypTqei0yU7NwrpFv2H-loiwRGxwpn6l4/edit?tab=t.0
