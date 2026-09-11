@@ -104,12 +104,11 @@ The first 1-3 pages of the google doc should be an executive summary, which give
 One good format is to have sections for:
 
 - What problem am I trying to solve? (and a bit on why you think it’s interesting)
-  - Remember - what you write is always far clearer to yourself than to the reader! Though you can assume it will be read by someone with mech interp research experience
+- Remember - what you write is always far clearer to yourself than to the reader! Though you can assume it will be read by someone with mech interp research experience
 - What are your high-level takeaways? What were the most interesting parts of your project?
 - One paragraph and graph per key experiment, giving the gist of what it was, what you found, and why this supports your key takeaways
 
 If bad data would sink your project, show me the data. If everything rests on the quality of some dataset or judgement calls (e.g. you generated the dataset with an LLM, or used an LLM judge to score outputs), look at it yourself - and include some randomly selected qualitative examples in the write-up, ideally just after the executive summary. Randomly selected, not cherry-picked! A handful of raw examples is the easiest way to show me that the thing your whole project rests on is actually real.
-
 
 
 ### Writing Advice

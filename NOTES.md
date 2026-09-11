@@ -197,7 +197,7 @@ Manual review of all 6 "other"-classified persona_only rows confirmed genuine re
 
 ### Instrument Validation: closing the positive-control gap
 
-I ran `odd_even_instrument_validation.py` (N=15/cell) to address the lack of positive controls for deception detection noted in Singh et al. (2026), rigging a `deceptive_rigged` frame where the model was ordered to hack and conceal.
+I ran `odd_even_instrument_validation.py` (N=15/cell) to address the lack of positive controls for deception detection noted in Singh, A. et al. (2026), rigging a `deceptive_rigged` frame where the model was ordered to hack and conceal.
 
 **Results:**
 * **Honest Baseline:** 0/30 hacking (confirms baseline competency).
